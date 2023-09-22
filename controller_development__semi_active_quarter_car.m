@@ -18,8 +18,8 @@ z_r = [0 5 10];
 %% initializing the state-space model - with active element
 A = [0         0                1    0;
      0         0                0    1;
-    -k_s/m_s   k_s/m_s          0    0;
-     k_s/m_a -(k_s + k_t)/m_a   0   -d_t/m_a];
+    -k_s/m_s   k_s/m_s          -d_s/m_s    d_s/m_s;
+     k_s/m_a -(k_s + k_t)/m_a   d_s/m_a   -(d_s + d_t)/m_a];
 
 
 B = [0; 0 ; 1/m_s; -1/m_a];

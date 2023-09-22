@@ -7,11 +7,22 @@ function [Zdot, O_simulator, O_model] = semi_active_suspension_quarter_car(t, z,
 
 %% Initialization : Augmented state variables
 
+% Model States
 q = [z(1), z(2), z(3), z(4)]';
 
+% Controller (Active Damper) States
 Z_cont_qcar = [z(5:end)']';
 
+% Displacements
 z_s = z(1);
+z_u = z(2);
+
+% Velocities
+z_dot_s = z(3);
+z_dot_u = z(4);
+
+% Damper piston velocity (Used for damping force saturation)
+damper_piston_velocity = z_dot_u - z_dot_s;
 
 %% Initialization : Road Input
 
@@ -48,10 +59,41 @@ z_s_ref = 0;
 
 e_zs = z_s_ref - (z_s - input.zs_steady_state);
 
-%% Controller Action 
+%% Controller Action - Desired Controller Force
 
+% Controller output
 y_cont = Cc_ds*Z_cont_qcar + Dc_ds*e_zs;
+
+% Desired controller force
 F_active_damper = input.controller_switch * y_cont;
+
+%% Inverse Controller Model - Realizeable Controller Force
+
+% Minimum damping cofficient (Reference - Tenecco Active Damper)
+damping_min = 100; % Ns/m
+
+% Maximum damping cofficient (Reference - Tenecco Active Damper)
+damping_max = 10000; % Ns/m
+
+% Required damping coefficient (Calculated using required damping force)
+damping_required = F_active_damper / damper_piston_velocity;
+
+% At steady-state damping pistion will be at rest and hence damping is
+% infinity. Hence, we need to correct for that
+if ~isinf(damping_required) && ~isnan(damping_required)
+
+    if abs(damping_required) > damping_max
+        damping_required = sign(damping_required)*damping_max;
+%     elseif abs(damping_required) < damping_min  
+%         damping_required = sign(damping_required)*damping_min;
+    end
+
+else
+    damping_required = 0;
+end
+
+% Realizable Controller Force
+F_active_damper = damping_required * damper_piston_velocity;
 
 %% Quarter car system dynamics
 
