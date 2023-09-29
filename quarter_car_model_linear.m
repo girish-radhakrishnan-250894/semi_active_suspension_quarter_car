@@ -35,8 +35,8 @@ zu_dot = q(4);
 %% Initialization : Component 
 
 % This is now a control input
-% d_s = input.d_s;       % Ns/m
-d_s = 3000;
+d_s = input.d_s;       % Ns/m
+% d_s = 3000;
 m_s = input.m_s;       % kg
 m_a = input.m_a;       % kg
 k_s = input.k_s;       % N/m
@@ -48,9 +48,6 @@ d_t = input.d_t;       % Ns/m
 
 M = [m_s 0;
      0 m_a];
-
-% f_qd_q_u = [k_s*(z_u - z_s) + d_s*(zu_dot - zs_dot) - input.gravity_switch*m_s*9.81;
-%            -k_s*(z_u - z_s) - d_s*(zu_dot - zs_dot) - input.gravity_switch*m_a*9.81 + k_t*(z_r - z_u) + d_t*(- zu_dot)];
 
 f_qd_q_u = [k_s*(z_u - z_s) + d_s*(zu_dot - zs_dot) + F_active_damper - input.gravity_switch*m_s*9.81;
            -k_s*(z_u - z_s) - d_s*(zu_dot - zs_dot) - F_active_damper - input.gravity_switch*m_a*9.81 + k_t*(z_r - z_u) + d_t*(- zu_dot)];

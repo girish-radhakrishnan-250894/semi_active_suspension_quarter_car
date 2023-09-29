@@ -13,6 +13,8 @@ q = [z(1), z(2), z(3), z(4)]';
 % Controller (Active Damper) States
 Z_cont_qcar = [z(5:end)']';
 
+
+
 % Displacements
 z_s = z(1);
 z_u = z(2);
@@ -54,46 +56,58 @@ Dc_ds = input.cD_ds;
 % must not change which implies the position is equal to the steady-state
 % value calculated
 z_s_ref = 0;
+z_dot_s_ref = 0;
+z_sus_def_ref = input.gravity_switch*(input.zu_steady_state - input.zs_steady_state);
 
 %% Error 
 
 e_zs = z_s_ref - (z_s - input.zs_steady_state);
+e_z_dot_s = z_dot_s_ref - z_dot_s;
+e_sus_def =  z_sus_def_ref - (z_u - z_s);
+
+error = e_zs;
 
 %% Controller Action - Desired Controller Force
 
-% Controller output
-y_cont = Cc_ds*Z_cont_qcar + Dc_ds*e_zs;
+% % Controller output
+y_cont = Cc_ds*Z_cont_qcar + Dc_ds*error;
 
 % Desired controller force
-F_active_damper = input.controller_switch * y_cont;
+% F_active_damper = input.controller_switch * y_cont;
+
+
+
+kp = 40000;
+ki = 1000;
+kd = 5000;
+F_active_damper = kp*e_zs + kd*e_z_dot_s;
+
+if F_active_damper*(damper_piston_velocity) > 0
+    F_active_damper = 0;
+end
 
 %% Inverse Controller Model - Realizeable Controller Force
 
-% Minimum damping cofficient (Reference - Tenecco Active Damper)
-damping_min = 100; % Ns/m
-
-% Maximum damping cofficient (Reference - Tenecco Active Damper)
-damping_max = 10000; % Ns/m
-
-% Required damping coefficient (Calculated using required damping force)
-damping_required = F_active_damper / damper_piston_velocity;
-
-% At steady-state damping pistion will be at rest and hence damping is
-% infinity. Hence, we need to correct for that
-if ~isinf(damping_required) && ~isnan(damping_required)
-
-    if abs(damping_required) > damping_max
-        damping_required = sign(damping_required)*damping_max;
-%     elseif abs(damping_required) < damping_min  
-%         damping_required = sign(damping_required)*damping_min;
-    end
-
-else
-    damping_required = 0;
-end
-
-% Realizable Controller Force
-F_active_damper = damping_required * damper_piston_velocity;
+% % Minimum suppliable current (Reference - Tenecco Active Damper)
+% I_min = input.I_min; % A
+% 
+% % Maximum suppliable current (Reference - Tenecco Active Damper)
+% I_max = input.I_max; % A
+% 
+% 
+% I_required = calculate_current_from_force(F_active_damper, damper_piston_velocity);
+% 
+% if isnan(I_required) || isinf(I_required)
+%     I_required = 0;
+% end
+% 
+% if abs(I_required) < I_min 
+%     I_required = I_min;
+% elseif abs(I_required) > I_max
+%     I_required = I_max;
+% end
+% 
+% F_active_damper = input.controller_switch*calculate_force_from_current(I_required, damper_piston_velocity);
 
 %% Quarter car system dynamics
 
@@ -101,7 +115,7 @@ F_active_damper = damping_required * damper_piston_velocity;
 
 %% Controller Dynamics
 
-Z_dot_cont_qcar = Ac_ds*Z_cont_qcar + Bc_ds*e_zs;
+Z_dot_cont_qcar = Ac_ds*Z_cont_qcar + Bc_ds*error;
 
 %% Augmented system dynamics
 
@@ -112,7 +126,7 @@ Zdot = [Qdot;
 
 %% Outputs
 
-O_simulator = [e_zs;
+O_simulator = [error;
                Qdot(3);
                F_active_damper;
                O_model(1)]';

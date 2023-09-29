@@ -16,18 +16,18 @@ t   =[0 5 10];  %tme vector
 z_r = [0 5 10];
 
 %% initializing the state-space model - with active element
-A = [0         0                1    0;
-     0         0                0    1;
-    -k_s/m_s   k_s/m_s          -d_s/m_s    d_s/m_s;
-     k_s/m_a -(k_s + k_t)/m_a   d_s/m_a   -(d_s + d_t)/m_a];
+A = [0         0                 1           0;
+     0         0                 0           1;
+    -k_s/m_s   k_s/m_s          -d_s/m_s     d_s/m_s;
+     k_s/m_a -(k_s + k_t)/m_a    d_s/m_a   -(d_s + d_t)/m_a];
 
 
 B = [0; 0 ; 1/m_s; -1/m_a];
 
 
-C = [1 0 0 0];
+C = [-k_s/m_s k_s/m_s -d_s/m_s d_s/m_s;];
 
-D= [0]';
+D= [ 1/m_s];
 
 %state-space model
 sys=ss(A,B,C,D); 

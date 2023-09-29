@@ -41,8 +41,8 @@ road_mode = 4;
 
 % [input.time, input.z_r] = road_input_selector(simulation_time, road_mode, u);
 % Smooth Pulse Road Input
-input.time =   [0 2 4 6 8 10 12 14 16 18 20]/4;
-input.z_r  = 1*[0 0 5 5 0  0  0  0  0  0  0]*1e-3; % Your equations on the speed
+input.time =   [0 2 4 6 8 10 12 14 16 18 200]/34;
+input.z_r  = 10*[0 0 5 5 5  5  5  5  5  5  5]*1e-3; % Your equations on the speed
 
 
 % Theoretical Step Road Input
@@ -52,7 +52,7 @@ input.z_r  = 1*[0 0 5 5 0  0  0  0  0  0  0]*1e-3; % Your equations on the speed
 
 %% Running the Simulation
 
-[t,X] = ode15s(@(t,X)semi_active_suspension_quarter_car(t,X,input), [0 input.time(end)], X0, opts);
+[t,X] = ode45(@(t,X)semi_active_suspension_quarter_car(t,X,input), [0 input.time(end)], X0, opts);
 
 % Output matrix initialization
 n_outputs = 4;
@@ -74,28 +74,30 @@ grid on
 
 % Sprung Mass Displacement
 figure
-plot(t,X(:,3)*1000,'k')
+plot(t,X(:,1)*1000,'k')
 legend('z_s')
 grid minor
 set(findall(gcf,'-property','FontSize'),'FontSize',16)
 
-% % Sprung Mass Displacement
-% figure
-% plot(t,O(:,2)*1000,'k')
-% legend('zs_ddot')
-% grid minor
-% set(findall(gcf,'-property','FontSize'),'FontSize',16)
+% Sprung Mass Acceleration
+figure
+plot(t,O(:,2),'k')
+legend('Acc z_{d_s}')
+grid minor
+set(findall(gcf,'-property','FontSize'),'FontSize',16)
+
+
 
 % Unsprung Mass Displacement
 figure
-plot(t,X(:,4)*1000,'k')
+plot(t,X(:,2)*1000,'k')
 legend('z_u')
 grid minor
 set(findall(gcf,'-property','FontSize'),'FontSize',16)
 
 % Sprung mass displacement error
 figure
-plot(t,O(:,1),'k')
+plot(t,O(:,1)*1,'k')
 legend('e_zs')
 grid minor
 set(findall(gcf,'-property','FontSize'),'FontSize',16)
